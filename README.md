@@ -16,7 +16,9 @@ SFM-Turnstiles/
 │   │   │           └── itba/
 │   │   │               ├── model/
 │   │   │               │   ├── Agent.java
-│   │   │               │   └── Board.java
+│       │               │   ├── Board.java
+│       │               │   ├── ...
+│       │               │   └── Wall.java
 │   │   │               ├── view/
 │   │   │               │   └── SimulationPanel.java
 │   │   │               └── Main.java
@@ -30,6 +32,7 @@ SFM-Turnstiles/
 │       │               ├── model/
 │       │               │   ├── Agent.java
 │       │               │   ├── Board.java
+│       │               │   ├── ...
 │       │               │   └── Wall.java
 │       │               ├── view/
 │       │               │   └── SimulationPanel.java
