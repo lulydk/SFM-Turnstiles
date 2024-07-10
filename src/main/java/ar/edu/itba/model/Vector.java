@@ -8,8 +8,8 @@ public class Vector {
     private double angle;
 
     public Vector(double magnitude, double angle) {
-        setMagnitude(magnitude);
         setAngle(angle);
+        setMagnitude(magnitude);
     }
 
     public Vector(Vector anotherVector) {

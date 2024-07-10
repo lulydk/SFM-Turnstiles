@@ -27,7 +27,7 @@ public class Wall {
     }
 
     public boolean isPointInSegment(Point point) {
-        return minimumDistance(point) < DELTA;
+        return minimumDistance(point).getMagnitude() < DELTA;
     }
 
     /**
@@ -38,38 +38,17 @@ public class Wall {
      *
      * based on: <a href="https://www.geeksforgeeks.org/minimum-distance-from-a-point-to-the-line-segment-using-vectors/">Minimum distance from point to line segment</a>
      */
-    public double minimumDistance(Point point) {
-        double startX = startPoint.x();
-        double startY = startPoint.y();
-        double endX = endPoint.x();
-        double endY = endPoint.y();
-        double pointX = point.x();
-        double pointY = point.y();
+    public Vector minimumDistance(Point point) {
+        Vector wall = startPoint.getVector(endPoint);
+        Vector startToPoint = startPoint.getVector(point);
+        Vector endToPoint = endPoint.getVector(point);
 
-        double wallX = endX - startX;
-        double wallY = endY - startY;
-        double pointToEndX = pointX - endX;
-        double pointToEndY = pointY - endY;
-        double pointToStartX = pointX - startX;
-        double pointToStartY = pointY - startY;
-
-        double dotProductEnd = wallX * pointToEndX + wallY * pointToEndY;
-        double dotProductStart = wallX * pointToStartX + wallY * pointToStartY;
-
-        double minDistance;
-        if (dotProductEnd > 0) {
-            double distanceX = pointX - endX;
-            double distanceY = pointY - endY;
-            minDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        } else if (dotProductStart < 0) {
-            double distanceX = pointX - startX;
-            double distanceY = pointY - startY;
-            minDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        } else {
-            double wallModulus = Math.sqrt(wallX * wallX + wallY * wallY);
-            minDistance = Math.abs(wallX * pointToStartY - wallY * pointToStartX) / wallModulus;
-        }
-        return minDistance;
+        if(wall.dotProduct(endToPoint) > 0)
+            return endToPoint;
+        else if(wall.dotProduct(startToPoint) < 0)
+            return startToPoint;
+        else
+            return getPerpendicularDirection(point);
     }
 
     /**
@@ -83,7 +62,15 @@ public class Wall {
     public Vector getPerpendicularDirection(Point point) {
         Vector a = startPoint.getVector(point);
         Vector bHat = endPoint.getVector(startPoint).normalizeVector();
-        return a.subtract(bHat.multiplyByConstant(bHat.dotProduct(a)));
+        Vector proj = bHat.multiplyByConstant(bHat.dotProduct(a));
+        return a.subtract(proj);
+    }
+
+    public boolean isInFront(Point point) {
+        Vector normal = Vector.getTangentVector(startPoint.getVector(endPoint));
+        Vector direction = startPoint.getVector(point);
+
+        return normal.dotProduct(direction) >= 0;
     }
 
     @Override

@@ -75,7 +75,7 @@ public class PedestrianSimulation {
                             System.out.println("Unlock turnstile");
                             turnstile.removeFromQueue(1);
                         }
-                        if ((turnstile.minimumDistance(agent.getCurrentPosition()) <= agent.getRadius()) && turnstile.isBlocked(t)) {
+                        if ((turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) && turnstile.isBlocked(t)) {
                             System.out.println("/////////////////// Agent "+agent.getId()+" is in turnstile");
                             updateAgent = false;
                             break;
@@ -88,7 +88,7 @@ public class PedestrianSimulation {
                             System.out.println("+ Agent "+agent.getId()+" reached corridor line");
                             for (Turnstile turnstile : turnstiles) {
                                 Turnstile.Corridor corridor = turnstile.getCorridor();
-                                if (corridor.isPointInSegment(agent.getCurrentPosition()) || corridor.minimumDistance(agent.getCurrentPosition()) <= agent.getRadius()) {
+                                if (corridor.isPointInSegment(agent.getCurrentPosition()) || corridor.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
                                     System.out.println("-- Updating Agent "+agent.getId()+" target");
                                     agent.setTargetPoint(turnstile.getCenterPosition()/*.add(new Point(0,5))*/);
                                     break;
@@ -96,7 +96,7 @@ public class PedestrianSimulation {
                             }
                         } else if (Math.abs(agent.getCurrentPosition().y() - turnstiles.get(0).getCenterPosition().y()) <= agent.getRadius()) {
                             for (Turnstile turnstile : turnstiles) {
-                                if (turnstile.isPointInSegment(agent.getCurrentPosition()) || turnstile.minimumDistance(agent.getCurrentPosition()) <= agent.getRadius()) {
+                                if (turnstile.isPointInSegment(agent.getCurrentPosition()) || turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
                                     System.out.println("+ Blocking turnstile");
                                     turnstile.setBlockTime(t);
                                     //agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,5)));
@@ -136,7 +136,7 @@ public class PedestrianSimulation {
     private List<Wall> setWalls(double dimL) {
         System.out.println("Setting board...");
         List<Wall> newWalls = new ArrayList<>();
-        newWalls.add(new Wall(new Point(PADDING, PADDING), new Point(PADDING, dimL-PADDING)));
+        newWalls.add(new Wall(new Point(PADDING, dimL-PADDING), new Point(PADDING, PADDING)));
 
         //newWalls.add(new Wall(new Point(PADDING, dimL-PADDING), new Point(dimL-PADDING, dimL-PADDING)));
 
@@ -150,7 +150,7 @@ public class PedestrianSimulation {
         double spaceBetweenTurnstiles = (dimL - PADDING*2 - width*maxCount) / (maxCount+1);
         Point lastPoint = new Point(PADDING, dimL-PADDING);
         for (int i = 0; i < maxCount; i++) {
-            Wall newWall = new Wall(lastPoint, new Point(lastPoint.x() + spaceBetweenTurnstiles, lastPoint.y()));
+            Wall newWall = new Wall(new Point(lastPoint.x() + spaceBetweenTurnstiles, lastPoint.y()), lastPoint);
             walls.add(newWall);
             Point middlePoint = new Point(lastPoint.x() + spaceBetweenTurnstiles + width/2, lastPoint.y());
             Turnstile newTurnstile = new Turnstile(i, middlePoint, width, corridorLength);
@@ -160,11 +160,16 @@ public class PedestrianSimulation {
                     new Wall(newTurnstile.getCorridor().getStartPoint(), newTurnstile.getStartPoint())
             );
             walls.add(
+                    new Wall(newTurnstile.getStartPoint(), newTurnstile.getCorridor().getStartPoint())
+            );
+            walls.add(
                     new Wall(newTurnstile.getCorridor().getEndPoint(), newTurnstile.getEndPoint())
             );
-
+            walls.add(
+                    new Wall(newTurnstile.getEndPoint(), newTurnstile.getCorridor().getEndPoint())
+            );
         }
-        walls.add(new Wall(lastPoint, new Point(lastPoint.x() + spaceBetweenTurnstiles, lastPoint.y())));
+        walls.add(new Wall(new Point(lastPoint.x() + spaceBetweenTurnstiles, lastPoint.y()), lastPoint));
         return newTurnstiles;
     }
 

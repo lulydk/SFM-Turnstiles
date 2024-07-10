@@ -43,17 +43,19 @@ public class SFM {
 
         Vector wallsForce = new Vector(0, 0);
         for (Wall wall : walls) {
-            double distanceToWall = wall.minimumDistance(agent.getCurrentPosition());
-            Vector directionToWall = wall.getPerpendicularDirection(agent.getCurrentPosition());
+            if(!wall.isInFront(agent.getCurrentPosition()))
+                continue;
+            Vector directionToWall = wall.minimumDistance(agent.getCurrentPosition());
             Vector tangentVector = Vector.getTangentVector(directionToWall);
+            double distanceToWall = directionToWall.getMagnitude();
 
             wallsForce = wallsForce.add(
-                    directionToWall
-                            .multiplyByConstant( A*Math.exp((agent.getRadius() - distanceToWall)/B) - kn * g(agent.getRadius() - distanceToWall) )
-                            .subtract(
-                                    tangentVector
-                                            .multiplyByConstant( kt * g(agent.getRadius() - distanceToWall) * agent.getCurrentVelocity().dotProduct(tangentVector) )
-                            )
+            directionToWall
+                    .multiplyByConstant( A*Math.exp((agent.getRadius() - distanceToWall)/B) - kn * g(agent.getRadius() - distanceToWall) )
+                    .subtract(
+                            tangentVector
+                                    .multiplyByConstant( kt * g(agent.getRadius() - distanceToWall) * agent.getCurrentVelocity().dotProduct(tangentVector) )
+                    )
             );
         }
 
