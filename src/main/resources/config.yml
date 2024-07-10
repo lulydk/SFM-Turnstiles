@@ -1,0 +1,22 @@
+simulation:
+  dt: 0.5
+  method: "closeness" # closeness or emptiness
+  maxIterations: 1000
+  turnstileCount: 2
+  turnstileWidth: 1.2
+  corridorLength: 2.0
+board:
+  dimL: 10
+  cellLineCount: 5  # L10, C8 -> 1.25m per cell
+agents:
+  maxCount: 10
+  mass: 80.0
+  minD: 0.4
+  maxD: 0.7
+  desiredSpeed: 0.1
+sfm:
+  kn: 120000
+  kt: 240000
+  A: 200.0
+  B: 0.08
+  tau: 0.5
