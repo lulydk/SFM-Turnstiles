@@ -76,12 +76,10 @@ public class SimulationDrawer {
 
         Map<Double, Map<Board.Cell, List<Agent>>> boardState = simulation.getBoardState();
         try (FileWriter fw = new FileWriter("particles.xyz")) {
-            int step = 0;
-            for (double t : boardState.keySet()) {
-                List<Agent> agents = new ArrayList<>();
-                boardState.get(t).forEach((key, value) -> agents.addAll(value));
-                //System.out.println(agents.size());
-                fw.write(String.format("%d\n\n", idx+agents.size()-1));
+            for(int step = 0; step < boardState.size(); step++) {
+                final int finalStep = step;
+                Agent[] agents = simulation.getAgents().stream().filter(a -> a.getPositions().size() > finalStep).toArray(Agent[]::new);
+                fw.write(String.format("%d\n\n", idx+agents.length-1));
                 fw.write(structureString);
                 for (Agent agent : agents) {
                     if (agent.getPositions().size() > step) {
@@ -97,7 +95,6 @@ public class SimulationDrawer {
                         );
                     }
                 }
-                step += 1;
             }
         }
     }

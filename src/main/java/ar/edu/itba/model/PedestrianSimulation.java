@@ -127,6 +127,9 @@ public class PedestrianSimulation {
                             }
                         //}
                     }
+                    else {
+                        System.out.println("Agent: "+agent.getId()+" escaped");
+                    }
                 }
             }
             t += dt;
@@ -189,7 +192,6 @@ public class PedestrianSimulation {
                             desiredSpeed,
                             initialPosition.getVector(assignedTurnstile.getCorridorCenterPosition()).getAngle()
                     ),
-                    assignedTurnstile.getCorridorCenterPosition(),
                     assignedTurnstile
             );
             newAgents.add(newAgent);

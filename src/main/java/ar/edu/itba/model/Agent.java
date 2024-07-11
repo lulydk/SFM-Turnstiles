@@ -15,12 +15,13 @@ public class Agent {
     private int idx;
     private Point targetPoint;
     private Vector desiredVelocity;
+    private Turnstile targetTurnstile;
     private final List<Point> positions;
     private final List<Vector> velocities;
 
     private final double desiredSpeed;
 
-    public Agent(int id, double mass, double radius, Point initialPosition, Vector initialVelocity, Point targetPoint, Turnstile targetTurnstile) {
+    public Agent(int id, double mass, double radius, Point initialPosition, Vector initialVelocity, Turnstile targetTurnstile) {
         this.id = id;
         this.mass = mass;
         this.radius = radius;
@@ -31,7 +32,8 @@ public class Agent {
         desiredSpeed = initialVelocity.getMagnitude();
 
         setCurrentState(new State(initialPosition,initialVelocity));
-        setTargetPoint(targetPoint);
+        setTargetPoint(targetTurnstile.getCorridorCenterPosition());
+        this.targetTurnstile = targetTurnstile;
     }
 
     public void setCurrentState(State state) {
@@ -86,11 +88,22 @@ public class Agent {
     }
 
     public void setTargetPoint(Point targetPoint) {
+        if(this.targetPoint == targetPoint)
+            return;
+        System.out.println("-- Updating Agent "+id+" target");
         this.targetPoint = targetPoint;
         setDesiredVelocity(new Vector(
                 desiredSpeed,
                 getCurrentPosition().getVector(targetPoint).getAngle()
         ));
+    }
+
+    public Turnstile getTargetTurnstile() {
+        return targetTurnstile;
+    }
+
+    public void setTargetTurnstile(Turnstile targetTurnstile) {
+        this.targetTurnstile = targetTurnstile;
     }
 
     public boolean hasEscaped(double yCoord) {

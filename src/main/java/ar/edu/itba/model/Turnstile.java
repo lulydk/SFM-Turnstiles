@@ -24,6 +24,11 @@ public class Turnstile extends Wall {
         //blocked = false;
     }
 
+    public boolean isAligned(Point point, double radius) {
+        return point.x() > (centerPosition.x() - width/2) && point.x() < (centerPosition.x() + width/2) &&
+                (corridor.isInFront(point) || corridor.minimumDistance(point).getMagnitude() < radius);
+    }
+
     public int getId() {
         return id;
     }
