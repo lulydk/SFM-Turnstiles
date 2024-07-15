@@ -2,25 +2,30 @@ package ar.edu.itba.view;
 
 import ar.edu.itba.model.*;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class SimulationDrawer {
 
-    private static final double DELTA = 0.1;
+    private static final double DELTA = 0.03;
     private static final double WALL_RADIUS = 0.05;
 
     private static Data drawWalls(List<Wall> walls, int idx) {
         StringBuilder wallsString = new StringBuilder();
         for (Wall wall : walls) {
-            Point currentPoint = wall.getStartPoint();
-            Vector step = new Vector(DELTA, currentPoint.getVector(wall.getEndPoint()).getAngle());
-            while (currentPoint.getVector(wall.getEndPoint()).getAngle() < Math.PI) {
+            Point currentPoint, targetPoint;
+            Vector step;
+            if (wall.getStartPoint().getVector(wall.getEndPoint()).getAngle() < Math.PI) {
+                currentPoint = wall.getStartPoint();
+                targetPoint = wall.getEndPoint();
+            } else {
+                currentPoint = wall.getEndPoint();
+                targetPoint = wall.getStartPoint();
+            }
+            step = new Vector(DELTA, currentPoint.getVector(targetPoint).getAngle());
+            while (currentPoint.getVector(targetPoint).getAngle() < Math.PI) {
                 wallsString.append(String.format("%d %.4f %.4f 0 0 %.4f 255 255 255\n", -idx, currentPoint.x(), currentPoint.y(), WALL_RADIUS));
                 currentPoint = currentPoint.addVector(step);
                 idx += 1;
