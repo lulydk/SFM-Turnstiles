@@ -34,13 +34,14 @@ public class SFM {
             Vector directionToAgent = neighbor.getCurrentPosition().getVector(agent.getCurrentPosition()).normalizeVector();
             Vector tangentVector = Vector.getTangentVector(directionToAgent);
             double tangentialVelocityDiff = tangentVector.dotProduct(neighbor.getCurrentVelocity().subtract(agent.getCurrentVelocity()));
+            double superposition = radiiSum - agentsDistance;
 
             particlesForce = particlesForce.add(
                     directionToAgent
-                            .multiplyByConstant( A_a*Math.exp((radiiSum - agentsDistance)/B_a) + kn * g(radiiSum - agentsDistance) )
+                            .multiplyByConstant( A_a*Math.exp(superposition/B_a) + kn * g(superposition) )
                             .add(
                                     tangentVector
-                                            .multiplyByConstant( kt * g(radiiSum - agentsDistance) * tangentialVelocityDiff )
+                                            .multiplyByConstant( kt * g(superposition) * tangentialVelocityDiff )
                             )
             );
         }
@@ -51,14 +52,14 @@ public class SFM {
                 continue;
             Vector directionToWall = wall.minimumDistance(agent.getCurrentPosition());
             Vector tangentVector = Vector.getTangentVector(directionToWall);
-            double distanceToWall = directionToWall.getMagnitude();
+            double superposition = agent.getRadius() - directionToWall.getMagnitude();
 
             wallsForce = wallsForce.add(
             directionToWall
-                    .multiplyByConstant( A_w*Math.exp((agent.getRadius() - distanceToWall)/B_w) - kn * g(agent.getRadius() - distanceToWall) )
+                    .multiplyByConstant( A_w*Math.exp((superposition)/B_w) + kn * g(superposition) )
                     .subtract(
                             tangentVector
-                                    .multiplyByConstant( kt * g(agent.getRadius() - distanceToWall) * agent.getCurrentVelocity().dotProduct(tangentVector) )
+                                    .multiplyByConstant( kt * g(superposition) * agent.getCurrentVelocity().dotProduct(tangentVector) )
                     )
             );
         }

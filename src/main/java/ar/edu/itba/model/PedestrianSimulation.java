@@ -72,41 +72,50 @@ public class PedestrianSimulation {
                 }
             }
             */
-            for (Board.Cell cell : lastState.keySet()) {
-                Map<Agent, Vector> forces = lastState.get(cell).stream().collect(Collectors.toUnmodifiableMap(Function.identity(), agent -> {
-                    List<Agent> neighbors = new ArrayList<>(lastState.get(cell));
-                    for (Board.Cell neighborCell : cell.getNeighbors()) {
-                        if (lastState.containsKey(neighborCell)) {
-                            neighbors.addAll(lastState.get(neighborCell));
+            Map<Agent, Vector> forces = lastState
+                    .entrySet()
+                    .stream()
+                    .flatMap(e -> {
+                        Board.Cell cell = e.getKey();
+                        List<Agent> allAgents = new ArrayList<>(lastState.get(cell));
+                        for (Board.Cell neighborCell : cell.getNeighbors()) {
+                            if (lastState.containsKey(neighborCell)) {
+                                allAgents.addAll(lastState.get(neighborCell));
+                            }
                         }
-                    }
-                    neighbors.remove(agent);
+                        return e.getValue().stream().map(agent -> {
+                            /*
+                            if (agent.getTargetTurnstile().minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
+                            // if (agent.isInTurnstile()) {
+                                agent.setInTurnstile(agent.getTargetTurnstile().isLocked());
+                                agent.setCurrentState(new Agent.State(agent.getCurrentPosition(), agent.getCurrentVelocity()));
+                                return Vector.ZERO;
+                            }
+                             */
+                            List<Agent> neighbors = new ArrayList<>(allAgents);
+                            neighbors.remove(agent);
+                            Vector force = sfm.computeForce(agent, neighbors, walls);
+                            return Map.entry(agent, force);
+                        });
+                    })
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+            forces.forEach((agent, force) -> {
+                Verlet.step(agent, force, dt);
+
+                Turnstile turnstile = agent.getTargetTurnstile();
+                if (turnstile.isAligned(agent.getCurrentPosition(), agent.getRadius())) {
+                    agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,Y_HORIZON)));
                     /*
-                    if (agent.getTargetTurnstile().minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
-                    // if (agent.isInTurnstile()) {
-                        agent.setInTurnstile(agent.getTargetTurnstile().isLocked());
-                        agent.setCurrentState(new Agent.State(agent.getCurrentPosition(), agent.getCurrentVelocity()));
-                        return Vector.ZERO;
+                    if (!turnstile.isLocked() && (turnstile.isPointInSegment(agent.getCurrentPosition()) || turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius())) {
+                        //System.out.println("+ Blocking turnstile "+turnstile.getId());
+                        turnstile.setBlockTime(t);
+                        agent.setInTurnstile(true);
                     }
                      */
-                    return sfm.computeForce(agent, neighbors, walls);
-                }));
-                forces.forEach((agent, force) -> {
-                    Verlet.step(agent, force, dt);
-
-                    Turnstile turnstile = agent.getTargetTurnstile();
-                    if (turnstile.isAligned(agent.getCurrentPosition(), agent.getRadius())) {
-                        agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,Y_HORIZON)));
-                        /*
-                        if (!turnstile.isLocked() && (turnstile.isPointInSegment(agent.getCurrentPosition()) || turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius())) {
-                            //System.out.println("+ Blocking turnstile "+turnstile.getId());
-                            turnstile.setBlockTime(t);
-                            agent.setInTurnstile(true);
-                        }
-                         */
-                    }
-                    else
-                        agent.setTargetPoint(turnstile.getCorridorCenterPosition().add(new Point(0,Y_HORIZON)));
+                }
+                else
+                    agent.setTargetPoint(turnstile.getCorridorCenterPosition().add(new Point(0,Y_HORIZON)));
 //                        if (Math.abs(agent.getCurrentPosition().y() - turnstiles.get(0).getCenterPosition().y()) <= agent.getRadius()) {
 //                            for (Turnstile turnstile : turnstiles) {
 //                                if (turnstile.isPointInSegment(agent.getCurrentPosition()) || turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
@@ -118,20 +127,19 @@ public class PedestrianSimulation {
 //                            }
 //                        }
 
-                    if (!agent.hasEscaped(board.getDimL() + Y_HORIZON)) {
-                        for (Board.Cell neighborCell : getBoard().getCells()) {
-                            if (neighborCell.isInCell(agent.getCurrentPosition())) {
-                                boardState.get(t).putIfAbsent(neighborCell, new ArrayList<>());
-                                boardState.get(t).get(neighborCell).add(agent);
-                                break;
-                            }
+                if (!agent.hasEscaped(board.getDimL() + Y_HORIZON)) {
+                    for (Board.Cell neighborCell : getBoard().getCells()) {
+                        if (neighborCell.isInCell(agent.getCurrentPosition())) {
+                            boardState.get(t).putIfAbsent(neighborCell, new ArrayList<>());
+                            boardState.get(t).get(neighborCell).add(agent);
+                            break;
                         }
                     }
-                    else {
-                        System.out.println("Agent: "+agent.getId()+" escaped");
-                    }
-                });
-            }
+                }
+                else {
+                    System.out.println("Agent: "+agent.getId()+" escaped");
+                }
+            });
             t += dt;
         }
     }
