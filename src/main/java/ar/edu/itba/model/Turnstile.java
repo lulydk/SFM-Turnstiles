@@ -1,7 +1,5 @@
 package ar.edu.itba.model;
 
-import java.util.Random;
-
 public class Turnstile extends Wall {
     private final int id;
     private final double width;
@@ -10,7 +8,7 @@ public class Turnstile extends Wall {
 
     private double queue;
     private double unlockTime;
-    //private boolean locked;
+    private boolean locked;
     private final double LAMBDA = 1/5.0;
 
     public Turnstile(int id, Point position, double width, double corridorLength) {
@@ -21,7 +19,7 @@ public class Turnstile extends Wall {
 
         corridor = new Corridor(corridorLength, new Point(position.x(), position.y() - corridorLength));
         queue = 0;
-        //blocked = false;
+        locked = false;
     }
 
     public boolean isAligned(Point point, double radius) {
@@ -57,30 +55,34 @@ public class Turnstile extends Wall {
         return queue;
     }
 
-    public boolean isBlocked(double currentTime) {
+    public boolean lockTimeFinished(double currentTime) {
+        System.out.println("currentTime: " + currentTime+" unlockTime: " + unlockTime);
         return currentTime >= unlockTime;
     }
 
     /*
+     */
     public void setLocked(boolean locked) {
         this.locked = locked;
     }
 
-     */
+    public boolean isLocked() {
+        return locked;
+    }
+
 
     public void setBlockTime(double currentTime) {
         //unlockTime = currentTime - Math.log(1 - new Random().nextDouble()) / LAMBDA;
-        unlockTime = currentTime + 100.0;
-        //setLocked(true);
+        unlockTime = currentTime + 3.0;
+        setLocked(true);
     }
 
     public void addToQueue(double count) {
         queue += count;
     }
 
-    public double removeFromQueue(double count) {
+    public void removeFromQueue(double count) {
         queue -= count;
-        return queue;
     }
 
     public class Corridor extends Wall {

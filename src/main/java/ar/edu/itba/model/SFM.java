@@ -6,15 +6,19 @@ public class SFM {
 
     private final double kn;
     private final double kt;
-    private final double A;
-    private final double B;
+    private final double A_a;
+    private final double A_w;
+    private final double B_a;
+    private final double B_w;
     private final double tau;
 
-    public SFM(int kn, int kt, double A, double B, double tau) {
+    public SFM(int kn, int kt, double A_a, double A_w, double B_a, double B_w, double tau) {
         this.kn = kn;
         this.kt = kt;
-        this.A = A;
-        this.B = B;
+        this.A_a = A_a;
+        this.A_w = A_w;
+        this.B_a = B_a;
+        this.B_w = B_w;
         this.tau = tau;
     }
 
@@ -33,7 +37,7 @@ public class SFM {
 
             particlesForce = particlesForce.add(
                     directionToAgent
-                            .multiplyByConstant( A*Math.exp((radiiSum - agentsDistance)/B) + kn * g(radiiSum - agentsDistance) )
+                            .multiplyByConstant( A_a*Math.exp((radiiSum - agentsDistance)/B_a) + kn * g(radiiSum - agentsDistance) )
                             .add(
                                     tangentVector
                                             .multiplyByConstant( kt * g(radiiSum - agentsDistance) * tangentialVelocityDiff )
@@ -51,7 +55,7 @@ public class SFM {
 
             wallsForce = wallsForce.add(
             directionToWall
-                    .multiplyByConstant( A*Math.exp((agent.getRadius() - distanceToWall)/B) - kn * g(agent.getRadius() - distanceToWall) )
+                    .multiplyByConstant( A_w*Math.exp((agent.getRadius() - distanceToWall)/B_w) - kn * g(agent.getRadius() - distanceToWall) )
                     .subtract(
                             tangentVector
                                     .multiplyByConstant( kt * g(agent.getRadius() - distanceToWall) * agent.getCurrentVelocity().dotProduct(tangentVector) )

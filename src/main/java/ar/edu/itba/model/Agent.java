@@ -16,9 +16,9 @@ public class Agent {
     private Point targetPoint;
     private Vector desiredVelocity;
     private Turnstile targetTurnstile;
+    private boolean inTurnstile;
     private final List<Point> positions;
     private final List<Vector> velocities;
-
     private final double desiredSpeed;
 
     public Agent(int id, double mass, double radius, Point initialPosition, Vector initialVelocity, Turnstile targetTurnstile) {
@@ -27,6 +27,7 @@ public class Agent {
         this.radius = radius;
 
         idx = -1;
+        inTurnstile = false;
         positions = new ArrayList<>();
         velocities = new ArrayList<>();
         desiredSpeed = initialVelocity.getMagnitude();
@@ -90,7 +91,7 @@ public class Agent {
     public void setTargetPoint(Point targetPoint) {
         if(this.targetPoint == targetPoint)
             return;
-        System.out.println("-- Updating Agent "+id+" target");
+        //System.out.println("-- Updating Agent "+id+" target");
         this.targetPoint = targetPoint;
         setDesiredVelocity(new Vector(
                 desiredSpeed,
@@ -116,6 +117,14 @@ public class Agent {
 
     public Vector getVelocityAt(int i) {
         return velocities.get(i);
+    }
+
+    public boolean isInTurnstile() {
+        return inTurnstile;
+    }
+
+    public void setInTurnstile(boolean inTurnstile) {
+        this.inTurnstile = inTurnstile;
     }
 
     @Override

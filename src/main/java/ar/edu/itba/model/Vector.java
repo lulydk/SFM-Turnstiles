@@ -6,6 +6,7 @@ package ar.edu.itba.model;
 public class Vector {
     private double magnitude;
     private double angle;
+    public static final Vector ZERO = new Vector(0,0);
 
     public Vector(double magnitude, double angle) {
         setAngle(angle);

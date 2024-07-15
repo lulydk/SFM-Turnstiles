@@ -34,8 +34,10 @@ public class Main {
                                                 new SFM(
                                                         (int) conf.get("sfm").get("kn"),
                                                         (int) conf.get("sfm").get("kt"),
-                                                        (double) conf.get("sfm").get("A"),
-                                                        (double) conf.get("sfm").get("B"),
+                                                        (double) conf.get("sfm").get("A_a"),
+                                                        (double) conf.get("sfm").get("A_w"),
+                                                        (double) conf.get("sfm").get("B_a"),
+                                                        (double) conf.get("sfm").get("B_w"),
                                                         (double) conf.get("sfm").get("tau")
                                                 ),
                                                 (int) conf.get("simulation").get("turnstileCount"),
