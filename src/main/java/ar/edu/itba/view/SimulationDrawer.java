@@ -37,47 +37,14 @@ public class SimulationDrawer {
         );
     }
 
-    private static Data drawTurnstiles(List<Turnstile> turnstiles, int idx) {
-        StringBuilder turnstilesString = new StringBuilder();
-        for (Turnstile turnstile : turnstiles) {
-            turnstilesString.append(String.format("%d %.4f %.4f 0 0 %.4f 128 128 128\n", -idx, turnstile.getStartPoint().x(), turnstile.getStartPoint().y(), WALL_RADIUS));
-            idx += 1;
-            turnstilesString.append(String.format("%d %.4f %.4f 0 0 %.4f 128 128 128\n", -idx, turnstile.getEndPoint().x(), turnstile.getEndPoint().y(), WALL_RADIUS));
-            idx += 1;
-            Turnstile.Corridor corridor = turnstile.getCorridor();
-            turnstilesString.append(String.format("%d %.4f %.4f 0 0 %.4f 128 128 128\n", -idx, corridor.getStartPoint().x(), corridor.getStartPoint().y(), WALL_RADIUS));
-            idx += 1;
-            turnstilesString.append(String.format("%d %.4f %.4f 0 0 %.4f 128 128 128\n", -idx, corridor.getEndPoint().x(), corridor.getEndPoint().y(), WALL_RADIUS));
-            idx += 1;
-            /*
-            Point currentPointLeft = turnstile.getStartPoint();
-            Point currentPointRight = turnstile.getEndPoint();
-            Vector step = new Vector(DELTA, currentPointLeft.getVector(corridor.getStartPoint()).getAngle());
-            // TODO: Fix this cut condition
-            while (currentPointLeft != corridor.getStartPoint()) {
-                turnstilesString.append(String.format("%d %.4f %.4f 0 0 %.4f 128 128 128)\n", idx, currentPointLeft.x(), currentPointLeft.y(), WALL_RADIUS));
-                currentPointLeft = currentPointLeft.addVector(step);
-                idx += 1;
-                turnstilesString.append(String.format("%d %.4f %.4f 0 0 %.4f 128 128 128)\n", idx, currentPointRight.x(), currentPointRight.y(), WALL_RADIUS));
-                currentPointRight = currentPointRight.addVector(step);
-                idx += 1;
-            }
-            */
-        }
-        return new Data(
-                turnstilesString.toString(),
-                idx
-        );
-    }
-
     public static void drawSimulation(PedestrianSimulation simulation) throws IOException {
         int idx = 1;
         Data dataWalls = drawWalls(simulation.getWalls(), idx);
         String structureString = dataWalls.dataString();
         idx = dataWalls.idx();
-        Data dataTurnstiles = drawTurnstiles(simulation.getTurnstiles(), idx);
-        structureString = structureString.concat(dataTurnstiles.dataString());
-        idx = dataTurnstiles.idx();
+        //Data dataTurnstiles = drawTurnstiles(simulation.getTurnstiles(), idx);
+        //structureString = structureString.concat(dataTurnstiles.dataString());
+        //idx = dataTurnstiles.idx();
 
         Map<Integer, Map<Board.Cell, List<Agent>>> boardState = simulation.getBoardState();
         try (FileWriter fw = new FileWriter("particles.xyz")) {

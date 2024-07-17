@@ -31,7 +31,7 @@ public class SFM {
         Vector particlesForce = new Vector(0, 0);
         Vector wallsForce = new Vector(0, 0);
 
-        if (agent.getAdvancement() != Agent.Advancement.ON_TURNSTILE || agent.getAdvancement() != Agent.Advancement.ON_TRANSACTION) {
+        if (agent.getAdvancement() != Agent.Advancement.ON_TURNSTILE) {
             for (Agent neighbor : neighbors) {
                 double radiiSum = agent.getRadius() + neighbor.getRadius();
                 double agentsDistance = agent.getCurrentPosition().distance(neighbor.getCurrentPosition());
@@ -73,7 +73,7 @@ public class SFM {
             }
         }
         Vector finalForce = desireForce.add(particlesForce).add(wallsForce);
-        double MAX_FORCE = 160.0; // 160.0 v0 = 1 // 40.0 v0 = 0.1
+        double MAX_FORCE = 150.0; // v0 = 0.6 F = 130.0 // v0 = 0.8 2T F = 150.0 ; 1T F = 160.0 // v0 = 1 F = 160.0 // v0 = 0.1 F = 40.0
         if (finalForce.getMagnitude() > MAX_FORCE) {
             finalForce.setMagnitude(MAX_FORCE);
         }
