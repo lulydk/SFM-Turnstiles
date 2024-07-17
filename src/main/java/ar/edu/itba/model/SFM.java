@@ -74,7 +74,12 @@ public class SFM {
             );
         }
 
-        return desireForce.add(particlesForce).add(wallsForce);
+        Vector finalForce = desireForce.add(particlesForce).add(wallsForce);
+        if (finalForce.getMagnitude() > 40.0) {
+            finalForce.setMagnitude(40.0);
+        }
+
+        return finalForce;
     }
 
     private static double g(double x) {
