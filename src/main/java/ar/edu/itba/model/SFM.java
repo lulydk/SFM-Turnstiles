@@ -1,5 +1,6 @@
 package ar.edu.itba.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SFM {
@@ -23,31 +24,40 @@ public class SFM {
     }
 
     public Vector computeForce(Agent agent, List<Agent> neighbors, List<Wall> walls) {
+
         Vector desireForce = agent.getDesiredVelocity()
                 .subtract(agent.getCurrentVelocity())
                 .multiplyByConstant(agent.getMass()/tau);
 
         Vector particlesForce = new Vector(0, 0);
-        for (Agent neighbor : neighbors) {
-            double radiiSum = agent.getRadius() + neighbor.getRadius();
-            double agentsDistance = agent.getCurrentPosition().distance(neighbor.getCurrentPosition());
-            Vector directionToAgent = neighbor.getCurrentPosition().getVector(agent.getCurrentPosition()).normalizeVector();
-            Vector tangentVector = Vector.getTangentVector(directionToAgent);
-            double tangentialVelocityDiff = tangentVector.dotProduct(neighbor.getCurrentVelocity().subtract(agent.getCurrentVelocity()));
-            double superposition = radiiSum - agentsDistance;
+        if (agent.getAdvancement() != Agent.Advancement.ON_TURNSTILE || agent.getAdvancement() != Agent.Advancement.ON_TRANSACTION) {
+            for (Agent neighbor : neighbors) {
+                double radiiSum = agent.getRadius() + neighbor.getRadius();
+                double agentsDistance = agent.getCurrentPosition().distance(neighbor.getCurrentPosition());
+                Vector directionToAgent = neighbor.getCurrentPosition().getVector(agent.getCurrentPosition()).normalizeVector();
+                Vector tangentVector = Vector.getTangentVector(directionToAgent);
+                double tangentialVelocityDiff = tangentVector.dotProduct(neighbor.getCurrentVelocity().subtract(agent.getCurrentVelocity()));
+                double superposition = radiiSum - agentsDistance;
 
-            particlesForce = particlesForce.add(
-                    directionToAgent
-                            .multiplyByConstant( A_a*Math.exp(superposition/B_a) + kn * g(superposition) )
-                            .add(
-                                    tangentVector
-                                            .multiplyByConstant( kt * g(superposition) * tangentialVelocityDiff )
-                            )
-            );
+                particlesForce = particlesForce.add(
+                        directionToAgent
+                                .multiplyByConstant( A_a*Math.exp(superposition/B_a) + kn * g(superposition) )
+                                .add(
+                                        tangentVector
+                                                .multiplyByConstant( kt * g(superposition) * tangentialVelocityDiff )
+                                )
+                );
+            }
         }
 
         Vector wallsForce = new Vector(0, 0);
-        for (Wall wall : walls) {
+
+        List<Wall> delimiters = new ArrayList<>(walls);
+        if (agent.getTargetTurnstile().isLocked() && agent.getAdvancement() != Agent.Advancement.ON_TURNSTILE) {
+            delimiters.add(new Wall(agent.getTargetTurnstile().getEndPoint(), agent.getTargetTurnstile().getStartPoint()));
+        }
+
+        for (Wall wall : delimiters) {
             if(!wall.isInFront(agent.getCurrentPosition()))
                 continue;
             Vector directionToWall = wall.minimumDistance(agent.getCurrentPosition());

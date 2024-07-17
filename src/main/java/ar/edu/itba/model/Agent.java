@@ -16,10 +16,19 @@ public class Agent {
     private Point targetPoint;
     private Vector desiredVelocity;
     private Turnstile targetTurnstile;
-    private boolean inTurnstile;
     private final List<Point> positions;
     private final List<Vector> velocities;
     private final double desiredSpeed;
+
+    private Advancement advancement;
+
+    public enum Advancement {
+        DEFAULT,
+        ON_CORRIDOR,
+        ON_TURNSTILE,
+        ON_TRANSACTION,
+        FINISHED_TRANSACTION
+    }
 
     public Agent(int id, double mass, double radius, Point initialPosition, Vector initialVelocity, Turnstile targetTurnstile) {
         this.id = id;
@@ -27,13 +36,14 @@ public class Agent {
         this.radius = radius;
 
         idx = -1;
-        inTurnstile = false;
         positions = new ArrayList<>();
         velocities = new ArrayList<>();
         desiredSpeed = initialVelocity.getMagnitude();
 
+        advancement = Advancement.DEFAULT;
+
         setCurrentState(new State(initialPosition,initialVelocity));
-        setTargetPoint(targetTurnstile.getCorridorCenterPosition());
+        setTargetPoint(targetTurnstile.getCorridorCenterPosition().add(new Point(0, 0.8)));
         this.targetTurnstile = targetTurnstile;
     }
 
@@ -119,12 +129,12 @@ public class Agent {
         return velocities.get(i);
     }
 
-    public boolean isInTurnstile() {
-        return inTurnstile;
+    public Advancement getAdvancement() {
+        return advancement;
     }
 
-    public void setInTurnstile(boolean inTurnstile) {
-        this.inTurnstile = inTurnstile;
+    public void setAdvancement(Advancement advancement) {
+        this.advancement = advancement;
     }
 
     @Override

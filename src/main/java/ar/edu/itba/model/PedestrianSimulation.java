@@ -21,7 +21,7 @@ public class PedestrianSimulation {
 
     private final int Y_HORIZON = 2;
 
-    private final static double PADDING = 0.8;
+    private final static double PADDING = 1.5;
 
     public PedestrianSimulation(double dimL, int cellLineCount, double dt, int maxAgents, double mass, double minD, double maxD, double desiredSpeed, int maxIterations, String method, SFM sfm, int turnstileCount, double turnstileWidth, double corridorLength) {
         t = 0;
@@ -60,18 +60,15 @@ public class PedestrianSimulation {
 
     public void run() {
         while (boardState.size() < maxIterations && !boardState.get(t-dt).isEmpty()) {
-            System.out.println("Iteration: " + boardState.size());
+            System.out.println("Iteration: " + boardState.size()+"; time: " + t);
             Map<Board.Cell, List<Agent>> lastState = boardState.get(t-dt);
             boardState.put(t, new HashMap<>());
-            /*
-            for (Turnstile turnstile : turnstiles) {
-                if (turnstile.isLocked() && turnstile.lockTimeFinished(t)) {
-                    System.out.println("//// unlocking turnstile "+turnstile.getId());
-                    turnstile.setLocked(false);
-                    turnstile.removeFromQueue(1);
-                }
-            }
-            */
+//            for (Turnstile turnstile : turnstiles) {
+//                if (turnstile.isLocked() && turnstile.lockTimeFinished(t)) {
+//                    turnstile.setLocked(false);
+//                    turnstile.removeFromQueue(1);
+//                }
+//            }
             Map<Agent, Vector> forces = lastState
                     .entrySet()
                     .stream()
@@ -85,13 +82,12 @@ public class PedestrianSimulation {
                         }
                         return e.getValue().stream().map(agent -> {
                             /*
-                            if (agent.getTargetTurnstile().minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
-                            // if (agent.isInTurnstile()) {
-                                agent.setInTurnstile(agent.getTargetTurnstile().isLocked());
+                            if (agent.getAdvancement() == Agent.Advancement.ON_TRANSACTION) {
                                 agent.setCurrentState(new Agent.State(agent.getCurrentPosition(), agent.getCurrentVelocity()));
-                                return Vector.ZERO;
+                                return Map.entry(agent, Vector.ZERO);
                             }
                              */
+
                             List<Agent> neighbors = new ArrayList<>(allAgents);
                             neighbors.remove(agent);
                             Vector force = sfm.computeForce(agent, neighbors, walls);
@@ -104,28 +100,35 @@ public class PedestrianSimulation {
                 Verlet.step(agent, force, dt);
 
                 Turnstile turnstile = agent.getTargetTurnstile();
-                if (turnstile.isAligned(agent.getCurrentPosition(), agent.getRadius())) {
-                    agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,Y_HORIZON)));
-                    /*
-                    if (!turnstile.isLocked() && (turnstile.isPointInSegment(agent.getCurrentPosition()) || turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius())) {
-                        //System.out.println("+ Blocking turnstile "+turnstile.getId());
-                        turnstile.setBlockTime(t);
-                        agent.setInTurnstile(true);
-                    }
-                     */
+                if (agent.getAdvancement() == Agent.Advancement.DEFAULT) {
+                    agent.setTargetPoint(turnstile.getCorridorCenterPosition().add(new Point(0,0.8)));
                 }
-                else
-                    agent.setTargetPoint(turnstile.getCorridorCenterPosition().add(new Point(0,Y_HORIZON)));
-//                        if (Math.abs(agent.getCurrentPosition().y() - turnstiles.get(0).getCenterPosition().y()) <= agent.getRadius()) {
-//                            for (Turnstile turnstile : turnstiles) {
-//                                if (turnstile.isPointInSegment(agent.getCurrentPosition()) || turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
-//                                    System.out.println("+ Blocking turnstile");
-//                                    turnstile.setBlockTime(t);
-//                                    //agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,Y_HORIZON)));
-//                                    break;
-//                                }
-//                            }
-//                        }
+                if (turnstile.isAligned(agent.getCurrentPosition(), agent.getRadius())) {
+                    agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,0.8)));
+                    if (agent.getAdvancement() == Agent.Advancement.DEFAULT && agent.getCurrentPosition().y() > turnstile.getCorridorCenterPosition().y()) {
+                        agent.setAdvancement(Agent.Advancement.ON_CORRIDOR);
+                    } else if (agent.getAdvancement() == Agent.Advancement.ON_CORRIDOR) {
+                        if (!turnstile.isLocked() && turnstile.minimumDistance(agent.getCurrentPosition()).getMagnitude() <= agent.getRadius()) {
+                            agent.setAdvancement(Agent.Advancement.ON_TURNSTILE);
+                            turnstile.setLocked(true);
+                        }
+                    } else if (agent.getAdvancement() == Agent.Advancement.ON_TURNSTILE) {
+                        Point newTargetPoint = turnstile.getCenterPosition().add(new Point(0,0.7));
+                        agent.setTargetPoint(newTargetPoint);
+                        if (newTargetPoint.distance(agent.getCurrentPosition()) <= agent.getRadius()) {
+                            agent.setAdvancement(Agent.Advancement.ON_TRANSACTION);
+                            turnstile.setBlockTime(t);
+                        }
+                    }
+                    /*
+                     */
+                    else if (agent.getAdvancement() == Agent.Advancement.ON_TRANSACTION && turnstile.lockTimeFinished(t)) {
+                        agent.setAdvancement(Agent.Advancement.FINISHED_TRANSACTION);
+                        turnstile.setLocked(false);
+                    } else if (agent.getAdvancement() == Agent.Advancement.FINISHED_TRANSACTION) {
+                        agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,Y_HORIZON)));
+                    }
+                }
 
                 if (!agent.hasEscaped(board.getDimL() + Y_HORIZON)) {
                     for (Board.Cell neighborCell : getBoard().getCells()) {
@@ -189,7 +192,7 @@ public class PedestrianSimulation {
         boardState.put(t, new HashMap<>());
         List<Agent> newAgents = new ArrayList<>();
         for (int i = 0; i < maxAgents; i++) {
-            Point initialPosition = Utils.getRandomPoint(i, PADDING*2, PADDING*2, board.getDimL()-PADDING*2, board.getDimL()/2, newAgents, maxD);
+            Point initialPosition = Utils.getRandomPoint(i, PADDING+maxD, PADDING+maxD, board.getDimL()-PADDING-maxD, board.getDimL()/2, newAgents, maxD);
             Turnstile assignedTurnstile = assignTurnstile(method, initialPosition);
             Agent newAgent = new Agent(
                     i,

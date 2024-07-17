@@ -56,12 +56,10 @@ public class Turnstile extends Wall {
     }
 
     public boolean lockTimeFinished(double currentTime) {
-        System.out.println("currentTime: " + currentTime+" unlockTime: " + unlockTime);
+        //System.out.println("currentTime: " + currentTime+" unlockTime: " + unlockTime);
         return currentTime >= unlockTime;
     }
 
-    /*
-     */
     public void setLocked(boolean locked) {
         this.locked = locked;
     }
@@ -73,8 +71,8 @@ public class Turnstile extends Wall {
 
     public void setBlockTime(double currentTime) {
         //unlockTime = currentTime - Math.log(1 - new Random().nextDouble()) / LAMBDA;
-        unlockTime = currentTime + 3.0;
-        setLocked(true);
+        unlockTime = currentTime + 10.0;
+        //setLocked(true);
     }
 
     public void addToQueue(double count) {
