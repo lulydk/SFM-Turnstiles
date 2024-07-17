@@ -17,11 +17,12 @@ public class PedestrianSimulation {
     private final SFM sfm;
 
     private double t;
-    private final Map<Double, Map<Board.Cell, List<Agent>>> boardState;
+    private int step;
+    private final Map<Integer, Map<Board.Cell, List<Agent>>> boardState;
 
     private final int Y_HORIZON = 2;
 
-    private final static double PADDING = 1.5;
+    private final static double PADDING = 2.0;
 
     public PedestrianSimulation(double dimL, int cellLineCount, double dt, int maxAgents, double mass, double minD, double maxD, double desiredSpeed, int maxIterations, String method, SFM sfm, int turnstileCount, double turnstileWidth, double corridorLength) {
         t = 0;
@@ -34,8 +35,10 @@ public class PedestrianSimulation {
         turnstiles = setTurnstiles(turnstileCount, turnstileWidth, corridorLength, dimL);
 
         boardState = new HashMap<>();
+        step = 0;
         agents = setAgents(maxAgents, mass, minD, maxD, desiredSpeed, method);
         t += dt;
+        step++;
     }
 
     public Board getBoard() {
@@ -54,15 +57,15 @@ public class PedestrianSimulation {
         return turnstiles;
     }
 
-    public Map<Double, Map<Board.Cell, List<Agent>>> getBoardState() {
+    public Map<Integer, Map<Board.Cell, List<Agent>>> getBoardState() {
         return boardState;
     }
 
     public void run() {
-        while (boardState.size() < maxIterations && !boardState.get(t-dt).isEmpty()) {
+        while (step < maxIterations && !boardState.get(step-1).isEmpty()) {
             System.out.println("Iteration: " + boardState.size()+"; time: " + t);
-            Map<Board.Cell, List<Agent>> lastState = boardState.get(t-dt);
-            boardState.put(t, new HashMap<>());
+            Map<Board.Cell, List<Agent>> lastState = boardState.get(step-1);
+            boardState.put(step, new HashMap<>());
 //            for (Turnstile turnstile : turnstiles) {
 //                if (turnstile.isLocked() && turnstile.lockTimeFinished(t)) {
 //                    turnstile.setLocked(false);
@@ -113,7 +116,7 @@ public class PedestrianSimulation {
                             turnstile.setLocked(true);
                         }
                     } else if (agent.getAdvancement() == Agent.Advancement.ON_TURNSTILE) {
-                        Point newTargetPoint = turnstile.getCenterPosition().add(new Point(0,0.7));
+                        Point newTargetPoint = turnstile.getCenterPosition().add(new Point(0,0.8));
                         agent.setTargetPoint(newTargetPoint);
                         if (newTargetPoint.distance(agent.getCurrentPosition()) <= agent.getRadius()) {
                             agent.setAdvancement(Agent.Advancement.ON_TRANSACTION);
@@ -133,8 +136,8 @@ public class PedestrianSimulation {
                 if (!agent.hasEscaped(board.getDimL() + Y_HORIZON)) {
                     for (Board.Cell neighborCell : getBoard().getCells()) {
                         if (neighborCell.isInCell(agent.getCurrentPosition())) {
-                            boardState.get(t).putIfAbsent(neighborCell, new ArrayList<>());
-                            boardState.get(t).get(neighborCell).add(agent);
+                            boardState.get(step).putIfAbsent(neighborCell, new ArrayList<>());
+                            boardState.get(step).get(neighborCell).add(agent);
                             break;
                         }
                     }
@@ -144,6 +147,7 @@ public class PedestrianSimulation {
                 }
             });
             t += dt;
+            step++;
         }
     }
 
@@ -189,7 +193,7 @@ public class PedestrianSimulation {
 
     private List<Agent> setAgents(int maxAgents, double mass, double minD, double maxD, double desiredSpeed, String method) {
         System.out.println("Setting agents...");
-        boardState.put(t, new HashMap<>());
+        boardState.put(step, new HashMap<>());
         List<Agent> newAgents = new ArrayList<>();
         for (int i = 0; i < maxAgents; i++) {
             Point initialPosition = Utils.getRandomPoint(i, PADDING+maxD, PADDING+maxD, board.getDimL()-PADDING-maxD, board.getDimL()/2, newAgents, maxD);
@@ -208,8 +212,8 @@ public class PedestrianSimulation {
             newAgents.add(newAgent);
             for (Board.Cell cell : board.getCells()) {
                 if (cell.isInCell(initialPosition)) {
-                    boardState.get(t).putIfAbsent(cell, new ArrayList<>());
-                    boardState.get(t).get(cell).add(newAgent);
+                    boardState.get(step).putIfAbsent(cell, new ArrayList<>());
+                    boardState.get(step).get(cell).add(newAgent);
                     break;
                 }
             }

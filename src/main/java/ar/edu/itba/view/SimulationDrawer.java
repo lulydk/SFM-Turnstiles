@@ -79,7 +79,7 @@ public class SimulationDrawer {
         structureString = structureString.concat(dataTurnstiles.dataString());
         idx = dataTurnstiles.idx();
 
-        Map<Double, Map<Board.Cell, List<Agent>>> boardState = simulation.getBoardState();
+        Map<Integer, Map<Board.Cell, List<Agent>>> boardState = simulation.getBoardState();
         try (FileWriter fw = new FileWriter("particles.xyz")) {
             for(int step = 0; step < boardState.size(); step++) {
                 final int finalStep = step;

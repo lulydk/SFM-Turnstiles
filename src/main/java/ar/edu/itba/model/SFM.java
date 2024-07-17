@@ -28,8 +28,9 @@ public class SFM {
         Vector desireForce = agent.getDesiredVelocity()
                 .subtract(agent.getCurrentVelocity())
                 .multiplyByConstant(agent.getMass()/tau);
-
         Vector particlesForce = new Vector(0, 0);
+        Vector wallsForce = new Vector(0, 0);
+
         if (agent.getAdvancement() != Agent.Advancement.ON_TURNSTILE || agent.getAdvancement() != Agent.Advancement.ON_TRANSACTION) {
             for (Agent neighbor : neighbors) {
                 double radiiSum = agent.getRadius() + neighbor.getRadius();
@@ -41,42 +42,40 @@ public class SFM {
 
                 particlesForce = particlesForce.add(
                         directionToAgent
-                                .multiplyByConstant( A_a*Math.exp(superposition/B_a) + kn * g(superposition) )
+                                .multiplyByConstant(A_a * Math.exp(superposition / B_a) + kn * g(superposition))
                                 .add(
                                         tangentVector
-                                                .multiplyByConstant( kt * g(superposition) * tangentialVelocityDiff )
+                                                .multiplyByConstant(kt * g(superposition) * tangentialVelocityDiff)
+                                )
+                );
+            }
+
+            List<Wall> delimiters = new ArrayList<>(walls);
+            if (agent.getTargetTurnstile().isLocked() && agent.getAdvancement() != Agent.Advancement.ON_TURNSTILE) {
+                delimiters.add(new Wall(agent.getTargetTurnstile().getEndPoint(), agent.getTargetTurnstile().getStartPoint()));
+            }
+
+            for (Wall wall : delimiters) {
+                if (!wall.isInFront(agent.getCurrentPosition()))
+                    continue;
+                Vector directionToWall = wall.minimumDistance(agent.getCurrentPosition());
+                Vector tangentVector = Vector.getTangentVector(directionToWall);
+                double superposition = agent.getRadius() - directionToWall.getMagnitude();
+
+                wallsForce = wallsForce.add(
+                        directionToWall
+                                .multiplyByConstant(A_w * Math.exp((superposition) / B_w) + kn * g(superposition))
+                                .subtract(
+                                        tangentVector
+                                                .multiplyByConstant(kt * g(superposition) * agent.getCurrentVelocity().dotProduct(tangentVector))
                                 )
                 );
             }
         }
-
-        Vector wallsForce = new Vector(0, 0);
-
-        List<Wall> delimiters = new ArrayList<>(walls);
-        if (agent.getTargetTurnstile().isLocked() && agent.getAdvancement() != Agent.Advancement.ON_TURNSTILE) {
-            delimiters.add(new Wall(agent.getTargetTurnstile().getEndPoint(), agent.getTargetTurnstile().getStartPoint()));
-        }
-
-        for (Wall wall : delimiters) {
-            if(!wall.isInFront(agent.getCurrentPosition()))
-                continue;
-            Vector directionToWall = wall.minimumDistance(agent.getCurrentPosition());
-            Vector tangentVector = Vector.getTangentVector(directionToWall);
-            double superposition = agent.getRadius() - directionToWall.getMagnitude();
-
-            wallsForce = wallsForce.add(
-            directionToWall
-                    .multiplyByConstant( A_w*Math.exp((superposition)/B_w) + kn * g(superposition) )
-                    .subtract(
-                            tangentVector
-                                    .multiplyByConstant( kt * g(superposition) * agent.getCurrentVelocity().dotProduct(tangentVector) )
-                    )
-            );
-        }
-
         Vector finalForce = desireForce.add(particlesForce).add(wallsForce);
-        if (finalForce.getMagnitude() > 40.0) {
-            finalForce.setMagnitude(40.0);
+        double MAX_FORCE = 160.0; // 160.0 v0 = 1 // 40.0 v0 = 0.1
+        if (finalForce.getMagnitude() > MAX_FORCE) {
+            finalForce.setMagnitude(MAX_FORCE);
         }
 
         return finalForce;
