@@ -1,5 +1,7 @@
 package ar.edu.itba.model;
 
+import ar.edu.itba.utils.Utils;
+
 public class Turnstile extends Wall {
     private final int id;
     private final double width;
@@ -70,9 +72,7 @@ public class Turnstile extends Wall {
 
 
     public void setBlockTime(double currentTime) {
-        //unlockTime = currentTime - Math.log(1 - new Random().nextDouble()) / LAMBDA;
-        unlockTime = currentTime + 10.0;
-        //setLocked(true);
+        unlockTime = currentTime + Utils.getRandomTransactionTime();
     }
 
     public void addToQueue(double count) {

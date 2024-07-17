@@ -41,4 +41,10 @@ public class Utils {
         }
         return newPoint;
     }
+
+    public static double getRandomTransactionTime() {
+        double deviation = 1.0;
+        double mean = 5;
+        return random.nextGaussian() * deviation + mean;
+    }
 }
