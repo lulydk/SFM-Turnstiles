@@ -4,7 +4,6 @@ import ar.edu.itba.utils.Utils;
 import static ar.edu.itba.utils.Utils.METHOD_EMPTINESS;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class PedestrianSimulation {
@@ -61,9 +60,19 @@ public class PedestrianSimulation {
         return boardState;
     }
 
+    public double getDt() {
+        return dt;
+    }
+
+    public int getStep() {
+        return step;
+    }
+
     public void run() {
         while (step < maxIterations && !boardState.get(step-1).isEmpty()) {
-            System.out.println("Iteration: " + boardState.size()+"; time: " + t);
+            if (step % 100 == 0) {
+                System.out.println("Iteration: " + step +"; time: " + t);
+            }
             Map<Board.Cell, List<Agent>> lastState = boardState.get(step-1);
             boardState.put(step, new HashMap<>());
 //            for (Turnstile turnstile : turnstiles) {
@@ -122,18 +131,15 @@ public class PedestrianSimulation {
                             agent.setAdvancement(Agent.Advancement.ON_TRANSACTION);
                             turnstile.setBlockTime(t);
                         }
-                    }
-                    /*
-                     */
-                    else if (agent.getAdvancement() == Agent.Advancement.ON_TRANSACTION && turnstile.lockTimeFinished(t)) {
-                        agent.setAdvancement(Agent.Advancement.FINISHED_TRANSACTION);
+                    } else if (agent.getAdvancement() == Agent.Advancement.ON_TRANSACTION && turnstile.lockTimeFinished(t)) {
+                        agent.setAdvancementFinished(t);
                         turnstile.setLocked(false);
                     } else if (agent.getAdvancement() == Agent.Advancement.FINISHED_TRANSACTION) {
                         agent.setTargetPoint(turnstile.getCenterPosition().add(new Point(0,Y_HORIZON)));
                     }
                 }
 
-                if (!agent.hasEscaped(board.getDimL() + Y_HORIZON)) {
+                if (!agent.hasPassed(board.getDimL() + Y_HORIZON)) {
                     for (Board.Cell neighborCell : getBoard().getCells()) {
                         if (neighborCell.isInCell(agent.getCurrentPosition())) {
                             boardState.get(step).putIfAbsent(neighborCell, new ArrayList<>());
@@ -196,7 +202,7 @@ public class PedestrianSimulation {
         boardState.put(step, new HashMap<>());
         List<Agent> newAgents = new ArrayList<>();
         for (int i = 0; i < maxAgents; i++) {
-            Point initialPosition = Utils.getRandomPoint(i, PADDING+maxD, PADDING+maxD, board.getDimL()-PADDING-maxD, board.getDimL()/2, newAgents, maxD);
+            Point initialPosition = Utils.getRandomPoint(i, PADDING+maxD, PADDING+maxD, board.getDimL()-PADDING-maxD, board.getDimL() * 0.45, newAgents, maxD);
             Turnstile assignedTurnstile = assignTurnstile(method, initialPosition);
             Agent newAgent = new Agent(
                     i,

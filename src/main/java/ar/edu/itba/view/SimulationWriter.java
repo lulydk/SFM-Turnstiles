@@ -4,10 +4,11 @@ import ar.edu.itba.model.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SimulationDrawer {
+public class SimulationWriter {
 
     private static final double DELTA = 0.03;
     private static final double WALL_RADIUS = 0.05;
@@ -37,18 +38,15 @@ public class SimulationDrawer {
         );
     }
 
-    public static void drawSimulation(PedestrianSimulation simulation) throws IOException {
+    public static void writeSimulationOutput(PedestrianSimulation simulation, String filename) throws IOException {
         int idx = 1;
         Data dataWalls = drawWalls(simulation.getWalls(), idx);
         String structureString = dataWalls.dataString();
         idx = dataWalls.idx();
-        //Data dataTurnstiles = drawTurnstiles(simulation.getTurnstiles(), idx);
-        //structureString = structureString.concat(dataTurnstiles.dataString());
-        //idx = dataTurnstiles.idx();
 
-        Map<Integer, Map<Board.Cell, List<Agent>>> boardState = simulation.getBoardState();
-        try (FileWriter fw = new FileWriter("particles.xyz")) {
-            for(int step = 0; step < boardState.size(); step++) {
+        //Map<Integer, Map<Board.Cell, List<Agent>>> boardState = simulation.getBoardState();
+        try (FileWriter fw = new FileWriter(filename)) {
+            for(int step = 0; step < simulation.getStep(); step++) {
                 final int finalStep = step;
                 Agent[] agents = simulation.getAgents().stream().filter(a -> a.getPositions().size() > finalStep).toArray(Agent[]::new);
                 fw.write(String.format("%d\n\n", idx+agents.length-1));
@@ -67,6 +65,31 @@ public class SimulationDrawer {
                         );
                     }
                 }
+            }
+        }
+    }
+
+    public static void writeEscapeData(PedestrianSimulation simulation, String filename) throws IOException {
+
+        double dt = simulation.getDt();
+        int totalSteps = simulation.getStep();
+        List<Agent> agents = simulation.getAgents();
+
+        Map<Double, Integer> escapes = new HashMap<>();
+        for (double time = 0; time < dt * totalSteps; time += dt) {
+            double finalTime = time;
+            escapes.put(
+                        time,
+                        (int) agents.stream()
+                                    .filter(agent -> agent.getEscapeTime() > 0 && agent.getEscapeTime() <= finalTime)
+                                    .count()
+                    );
+        }
+
+        try (FileWriter fw = new FileWriter(filename)) {
+            fw.write("time;escaped\n");
+            for (double time : escapes.keySet().stream().sorted().toList()) {
+                fw.write(String.format("%.4f;%d\n", time, escapes.get(time)));
             }
         }
     }

@@ -73,7 +73,7 @@ public class SFM {
             }
         }
         Vector finalForce = desireForce.add(particlesForce).add(wallsForce);
-        double MAX_FORCE = 150.0; // v0 = 0.6 F = 130.0 // v0 = 0.8 2T F = 150.0 ; 1T F = 160.0 // v0 = 1 F = 160.0 // v0 = 0.1 F = 40.0
+        double MAX_FORCE = 160.0; // v0 = 0.6 F = 130.0 // v0 = 0.8 2T F = 150.0 ; 1T F = 160.0 // v0 = 1 F = 160.0 // v0 = 0.1 F = 40.0
         if (finalForce.getMagnitude() > MAX_FORCE) {
             finalForce.setMagnitude(MAX_FORCE);
         }

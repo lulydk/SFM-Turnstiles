@@ -1,25 +1,26 @@
 package ar.edu.itba;
 
-import ar.edu.itba.model.Agent;
-import ar.edu.itba.model.Board;
 import ar.edu.itba.model.PedestrianSimulation;
 import ar.edu.itba.model.SFM;
-import ar.edu.itba.view.SimulationDrawer;
+import ar.edu.itba.view.SimulationWriter;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 public class Main {
+
+    private final static String fileDistintion = "5";
+    private final static String route = "output/q1/decision_distance/";
+
     public static void main(String[] args) throws FileNotFoundException {
         Yaml yaml = new Yaml();
         InputStream inputStream = new FileInputStream("src/main/resources/config.yml");
         Map<String, Map<String, Object>> conf = yaml.load(inputStream);
-        System.out.println("Setting simulation...");
+        System.out.println("+ Setting simulation...");
         PedestrianSimulation simulation = new PedestrianSimulation(
                                                 (int) conf.get("board").get("dimL"),
                                                 (int) conf.get("board").get("cellLineCount"),
@@ -44,11 +45,13 @@ public class Main {
                                                 (double) conf.get("simulation").get("turnstileWidth"),
                                                 (double) conf.get("simulation").get("corridorLength")
         );
-        System.out.println("Running simulation...");
+        System.out.println("+ Running simulation...");
         simulation.run();
         try {
-            System.out.println("Drawing simulation...");
-            SimulationDrawer.drawSimulation(simulation);
+            System.out.println("+ Writing simulation output for animation...");
+            SimulationWriter.writeSimulationOutput(simulation, route+"particles"+fileDistintion+".xyz");
+            System.out.println("+ Writing simulation output for analysis...");
+            SimulationWriter.writeEscapeData(simulation, route+"times_sim="+fileDistintion+".csv");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

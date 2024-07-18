@@ -10,16 +10,16 @@ public class Agent {
     private final int id;
     private final double mass;
     private final double radius;
+    private final double desiredSpeed;
+    private Turnstile targetTurnstile;
+    private double escapeTime;
 
     // updatable
     private int idx;
     private Point targetPoint;
     private Vector desiredVelocity;
-    private Turnstile targetTurnstile;
     private final List<Point> positions;
     private final List<Vector> velocities;
-    private final double desiredSpeed;
-
     private Advancement advancement;
 
     public enum Advancement {
@@ -41,6 +41,7 @@ public class Agent {
         desiredSpeed = initialVelocity.getMagnitude();
 
         advancement = Advancement.DEFAULT;
+        escapeTime = -1.0;
 
         setCurrentState(new State(initialPosition,initialVelocity));
         setTargetPoint(targetTurnstile.getCorridorCenterPosition().add(new Point(0, 0.8)));
@@ -117,7 +118,7 @@ public class Agent {
         this.targetTurnstile = targetTurnstile;
     }
 
-    public boolean hasEscaped(double yCoord) {
+    public boolean hasPassed(double yCoord) {
         return getCurrentPosition().y() > yCoord;
     }
 
@@ -135,6 +136,15 @@ public class Agent {
 
     public void setAdvancement(Advancement advancement) {
         this.advancement = advancement;
+    }
+
+    public void setAdvancementFinished(double t) {
+        this.advancement = Advancement.FINISHED_TRANSACTION;
+        escapeTime = t;
+    }
+
+    public double getEscapeTime() {
+        return escapeTime;
     }
 
     @Override
